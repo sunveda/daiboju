@@ -1,0 +1,19 @@
+{
+  "name": "daiboju",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Daiboju: privacy-first disaster alerts for Japan in your own language. A first alert in seconds, then tailored next steps and a walking route to the nearest evacuation site.",
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "test": "node --test test/*.test.js",
+    "keys": "node scripts/keys.mjs",
+    "listener": "node worker/listener.mjs"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}
