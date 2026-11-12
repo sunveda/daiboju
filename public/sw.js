@@ -11,18 +11,18 @@ self.addEventListener('push', (event) => {
   }
   event.waitUntil(self.registration.showNotification(data.title || 'Daiboju', {
     body: data.body || '',
-    icon: '/icon.svg',
-    badge: '/icon.svg',
+    icon: 'icon-192.png',
+    badge: 'icon-192.png',
     tag: data.url || 'daiboju',
     renotify: true,
     requireInteraction: true,
     vibrate: [300, 100, 300, 100, 300],
-    data: { url: data.url || '/' },
+    data: { url: data.url || './' },
   }));
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || '/';
+  const url = event.notification.data?.url || './';
   event.waitUntil(self.clients.openWindow(url));
 });

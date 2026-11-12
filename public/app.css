@@ -43,7 +43,7 @@ p { margin: 0 0 1em; }
 .small { font-size: .9rem; }
 
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; margin-bottom: 28px; text-decoration: none; }
-.brand-mark { width: 32px; height: 32px; border-radius: 9px; background: var(--signal); color: var(--signal-ink); display: grid; place-items: center; font-size: 1rem; }
+.brand-mark { width: 36px; height: 36px; border-radius: 10px; display: block; }
 
 .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
 
