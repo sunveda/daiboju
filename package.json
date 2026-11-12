@@ -12,7 +12,8 @@
     "dev": "node scripts/dev.mjs",
     "test": "node --test test/*.test.js",
     "keys": "node scripts/keys.mjs",
-    "listener": "node worker/listener.mjs"
+    "listener": "node worker/listener.mjs",
+    "demo-data": "node scripts/build-demo-data.mjs"
   },
   "dependencies": {
     "web-push": "^3.6.7"
