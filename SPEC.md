@@ -253,6 +253,13 @@ Local check: open `/?drill=1`, sign up any email, open `/demo`, enter the drill 
 4. **LINE:** create a Messaging API channel, set the webhook URL to `https://<app>.vercel.app/api/line-webhook`, enable webhooks, disable auto-reply.
 5. Set `CHANNELS_DRY_RUN=0` only after a drill to your own phone works.
 
+### Hosting the pages on sunveda.tech
+The pages in `public/` are path-relative and read the API origin from `public/config.js`.
+The same files are served at **https://sunveda.tech/app/daiboju/** (GitHub Pages, repo `sunveda/sunveda.tech`, folder `app/daiboju/`) with a `config.js` that points at the Vercel deployment.
+- Vercel env: `BASE_URL` = the Vercel URL (unsubscribe links), `PUBLIC_URL=https://sunveda.tech/app/daiboju` (links in messages).
+- `vercel.json` allows CORS from `https://sunveda.tech` for the browser-facing endpoints (`config`, `subscribe`, `unsubscribe`, `guidance`, `drill`). `ingest` and `line-webhook` stay server-to-server.
+- **Sync:** after changing `public/`, copy every file except `config.js` into `sunveda.tech/app/daiboju/` and open a PR there (assigned to `sunveda`, footer version updated).
+
 ---
 
 ## 11. Demo script (Gemini 4 Argon Tokyo Meetup, 90 minutes, teams of 2)

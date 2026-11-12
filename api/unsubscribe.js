@@ -23,3 +23,8 @@ export async function POST(request) {
   const r = await run(request);
   return json(r, r.ok ? 200 : 400);
 }
+
+// CORS preflight for the pages hosted at sunveda.tech/app/daiboju (headers come from vercel.json).
+export function OPTIONS() {
+  return new Response(null, { status: 204 });
+}

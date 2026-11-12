@@ -19,3 +19,8 @@ export async function POST(request) {
   const report = await handleEvents(events, { baseUrl: baseUrl(request) });
   return json({ ok: true, ms: Date.now() - t0, ...report, deliveries: report.deliveries.map(({ error, ...d }) => d) });
 }
+
+// CORS preflight for the pages hosted at sunveda.tech/app/daiboju (headers come from vercel.json).
+export function OPTIONS() {
+  return new Response(null, { status: 204 });
+}

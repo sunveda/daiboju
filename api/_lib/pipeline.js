@@ -13,10 +13,11 @@ import { contactOf, deleteSubscriber, subscribersIn, unsubToken } from './subscr
 
 const DAY = 86400;
 
-export async function handleEvents(events, { baseUrl = '' } = {}) {
+export async function handleEvents(events, { baseUrl = '', publicUrl = process.env.PUBLIC_URL || baseUrl } = {}) {
+  publicUrl = publicUrl.replace(/\/$/, '');
   const report = { events: [], deliveries: [], previews: [] };
   for (const event of events) {
-    const r = event.stage === 1 ? await stage1(event, baseUrl, report) : await stage2(event, baseUrl, report);
+    const r = event.stage === 1 ? await stage1(event, baseUrl, report) : await stage2(event, baseUrl, publicUrl, report);
     report.events.push({ id: event.id, hazard: event.hazard, stage: event.stage, drill: Boolean(event.drill), ...r });
   }
   return report;
@@ -42,7 +43,7 @@ async function stage1(event, baseUrl, report) {
   return { areas };
 }
 
-async function stage2(event, baseUrl, report) {
+async function stage2(event, baseUrl, publicUrl, report) {
   const s = store();
   await s.set(`evt:${event.id}`, JSON.stringify(event), { ex: 3 * DAY });
   let areas = 0;
@@ -63,7 +64,7 @@ async function stage2(event, baseUrl, report) {
       return [lang, g];
     })));
 
-    const link = (lang) => `${baseUrl}/go?e=${encodeURIComponent(event.id)}&p=${area.prefCode}&l=${lang}`;
+    const link = (lang) => `${publicUrl}/go?e=${encodeURIComponent(event.id)}&p=${area.prefCode}&l=${lang}`;
     const build = (lang) => {
       const g = guidance[lang];
       return {

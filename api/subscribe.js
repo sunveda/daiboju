@@ -33,3 +33,8 @@ export async function POST(request) {
   const sub = await upsertSubscriber({ ch: channel, contact: value, lang, pref: prefByCode(pref).code, drill });
   return json({ ok: true, channel, id: sub.id, unsubToken: unsubToken(sub.id) });
 }
+
+// CORS preflight for the pages hosted at sunveda.tech/app/daiboju (headers come from vercel.json).
+export function OPTIONS() {
+  return new Response(null, { status: 204 });
+}

@@ -15,3 +15,8 @@ export function GET() {
     prefectures: PREFECTURES.map(({ code, ja, en }) => ({ code, ja, en })),
   }, 200, { 'Cache-Control': 'public, max-age=300' });
 }
+
+// CORS preflight for the pages hosted at sunveda.tech/app/daiboju (headers come from vercel.json).
+export function OPTIONS() {
+  return new Response(null, { status: 204 });
+}

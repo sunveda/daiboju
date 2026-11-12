@@ -30,3 +30,8 @@ export async function GET(request) {
     guidance,
   }, 200, { 'Cache-Control': 'public, max-age=30' });
 }
+
+// CORS preflight for the pages hosted at sunveda.tech/app/daiboju (headers come from vercel.json).
+export function OPTIONS() {
+  return new Response(null, { status: 204 });
+}
