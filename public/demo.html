@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Daiboju · Drill console</title>
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="/app.css">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+<script src="config.js"></script>
 <style>
   main { max-width: 72rem; }
   .scen { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
@@ -22,12 +25,12 @@
 </head>
 <body>
 <main>
-  <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">大</span>Daiboju · Drill console</a>
+  <a class="brand" href="./"><img class="brand-mark" src="icon.svg" alt="" width="36" height="36">Daiboju · Drill console</a>
 
   <section class="card">
     <div class="row" style="align-items:end">
       <div><label for="secret" style="margin-top:0">Drill secret</label><input id="secret" type="password" autocomplete="off"></div>
-      <a class="btn ghost" href="/?drill=1" target="_blank" style="margin:0">Sign up a demo phone →</a>
+      <a class="btn ghost" href="./?drill=1" target="_blank" style="margin:0">Sign up a demo phone →</a>
     </div>
     <p class="small muted" style="margin:10px 0 16px">Drills run through the real pipeline but only reach people who signed up with "drill" ticked, and every message is labelled DRILL.</p>
     <div class="scen" id="scen"></div>
@@ -43,10 +46,11 @@
 
 <script type="module">
 const $ = (id) => document.getElementById(id);
+const API = window.DAIBOJU_API || '';
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 try { $('secret').value = sessionStorage.getItem('drillSecret') || ''; } catch {}
 
-const { scenarios } = await fetch('/api/drill').then((r) => r.json());
+const { scenarios } = await fetch(API + '/api/drill').then((r) => r.json());
 for (const [key, label] of Object.entries(scenarios)) {
   const b = Object.assign(document.createElement('button'), { className: 'btn' + (key === 'p2p-latest' ? ' ghost' : ' signal'), type: 'button', textContent: label });
   b.onclick = () => run(key, b);
@@ -59,7 +63,7 @@ async function run(scenario, button) {
   $('s1').innerHTML = $('s2').innerHTML = '';
   $('status').textContent = `Running “${button.textContent}”…`;
   try {
-    const res = await fetch('/api/drill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ secret: $('secret').value, scenario }) });
+    const res = await fetch(API + '/api/drill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ secret: $('secret').value, scenario }) });
     const r = await res.json();
     if (!res.ok) throw new Error(r.error);
     const sent = r.deliveries.filter((d) => d.status === 'sent').length;

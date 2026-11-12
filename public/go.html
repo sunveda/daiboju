@@ -6,11 +6,14 @@
 <title>Daiboju · What to do now</title>
 <meta name="theme-color" content="#d9381e">
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="/app.css">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+<script src="config.js"></script>
 </head>
 <body>
 <main>
-  <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">大</span>Daiboju</a>
+  <a class="brand" href="./"><img class="brand-mark" src="icon.svg" alt="" width="36" height="36">Daiboju</a>
   <div id="drill" class="drill-banner" hidden></div>
   <header id="head" class="alert-head"><h1 id="title">…</h1><p id="summary"></p></header>
   <ul class="facts" id="facts" style="margin-bottom:16px"></ul>
@@ -45,6 +48,7 @@
 
 <script type="module">
 const $ = (id) => document.getElementById(id);
+const API = window.DAIBOJU_API || '';
 const q = new URLSearchParams(location.search);
 const lang = (q.get('l') || 'en').slice(0, 5);
 document.documentElement.lang = lang;
@@ -69,7 +73,7 @@ const mapsSearch = `https://www.google.com/maps/search/?api=1&query=${encodeURIC
 
 let data;
 try {
-  data = await fetch(`/api/guidance?${new URLSearchParams({ e: q.get('e') || '', p: q.get('p') || '13', l: lang, h: q.get('h') || '' })}`).then((r) => r.json());
+  data = await fetch(`${API}/api/guidance?${new URLSearchParams({ e: q.get('e') || '', p: q.get('p') || '13', l: lang, h: q.get('h') || '' })}`).then((r) => r.json());
 } catch {
   data = null;
 }

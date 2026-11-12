@@ -6,12 +6,15 @@
 <title>Daiboju · Disaster alerts in your language</title>
 <meta name="description" content="When an earthquake, tsunami, typhoon or flood hits Japan, Daiboju tells you what to do, in your language. No account. No tracking.">
 <meta name="theme-color" content="#d9381e">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="stylesheet" href="/app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+<script src="config.js"></script>
 </head>
 <body>
 <main>
-  <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">大</span>Daiboju</a>
+  <a class="brand" href="./"><img class="brand-mark" src="icon.svg" alt="" width="36" height="36">Daiboju</a>
 
   <h1>When disaster hits, know what to do. In your language.</h1>
   <p class="muted">災害のとき、何をすればいいか。あなたの言葉で。</p>
@@ -70,8 +73,13 @@
 
 <script type="module">
 const $ = (id) => document.getElementById(id);
+const API = window.DAIBOJU_API || '';
 const params = new URLSearchParams(location.search);
-const cfg = await fetch('/api/config').then((r) => r.json());
+const cfg = await fetch(API + '/api/config').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+if (!cfg) {
+  $('form').innerHTML = '<h2>Sign-up opens soon · 登録は近日公開</h2><p class="muted">The alert service is not connected yet. Please check back shortly.</p>';
+  throw new Error('Daiboju API unreachable');
+}
 
 const CH = {
   webpush: { label: 'This browser', sub: 'Push notification', field: null },
@@ -127,7 +135,7 @@ $('form').addEventListener('submit', async (e) => {
   $('submit').disabled = true;
   try {
     if (ch === 'webpush') {
-      const reg = await navigator.serviceWorker.register('/sw.js');
+      const reg = await navigator.serviceWorker.register('sw.js');
       if ((await Notification.requestPermission()) !== 'granted') throw new Error('Notifications are blocked in this browser.');
       if (!cfg.vapidPublicKey) throw new Error('Push is not configured on the server yet.');
       const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8(cfg.vapidPublicKey) });
@@ -136,7 +144,7 @@ $('form').addEventListener('submit', async (e) => {
       body.contact = $('contact').value.replace(/[\s-]/g, '');
       if (ch !== 'email' && body.contact.startsWith('0')) body.contact = '+81' + body.contact.slice(1);
     }
-    const res = await fetch('/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const res = await fetch(API + '/api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Something went wrong');
     if (ch === 'line') {
@@ -145,7 +153,7 @@ $('form').addEventListener('submit', async (e) => {
         ${data.lineAddUrl ? `<a class="btn safe" href="${data.lineAddUrl}" target="_blank" rel="noopener">Open LINE · LINEを開く</a>` : '<span class="small muted">(LINE account link not configured yet)</span>'}`);
     } else {
       show(`<strong>You're set. · 登録しました。</strong><br>You will get alerts for ${$('pref').selectedOptions[0].text} in ${$('lang').selectedOptions[0].text.replace(' *', '')}.
-        <br><a class="small" href="/api/unsubscribe?id=${data.id}&t=${data.unsubToken}">Delete my data now</a>`);
+        <br><a class="small" href="${API}/api/unsubscribe?id=${data.id}&t=${data.unsubToken}">Delete my data now</a>`);
     }
   } catch (err) {
     show(err.message, true);
