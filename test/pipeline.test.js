@@ -201,3 +201,23 @@ test('sign-up gate: closed service accepts only drill opt-ins', async () => {
   }
   assert.equal((await config.GET().json()).signupOpen, true);
 });
+
+test('push renewal replaces an existing record and never revives a deleted one', async () => {
+  const { findSubscriber, deleteSubscriber } = await import('../api/_lib/subscribers.js');
+  const pushSub = (n) => ({ endpoint: `https://push.example/${n}`, expirationTime: null, keys: { p256dh: 'p', auth: 'a' } });
+  await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('old'), lang: 'ko', pref: '13' }));
+  const old = await findSubscriber('webpush', pushSub('old'));
+  assert.ok(old);
+
+  const r = await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('new'), lang: 'en', pref: '27', renews: 'https://push.example/old' }));
+  assert.equal(r.status, 200);
+  assert.equal(await findSubscriber('webpush', pushSub('old')), null, 'old record removed');
+  const renewed = await findSubscriber('webpush', pushSub('new'));
+  assert.equal(renewed.lang, 'ko', 'keeps the stored language, not the one sent');
+  assert.equal(renewed.pref, '13');
+
+  await deleteSubscriber(renewed.id); // the person deletes their data
+  const again = await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('newer'), lang: 'ko', pref: '13', renews: 'https://push.example/new' }));
+  assert.equal(again.status, 410);
+  assert.equal(await findSubscriber('webpush', pushSub('newer')), null);
+});

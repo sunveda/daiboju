@@ -91,6 +91,9 @@ async function deliver(subs, build, { event, area, stage, baseUrl, report }) {
       ...cache.get(sub.lang),
       unsubUrl: `${baseUrl}/api/unsubscribe?id=${sub.id}&t=${unsubToken(sub.id)}`,
       unsubLabel: ui('stop', sub.lang),
+      // Push notifications for the same event replace each other (stage 2 updates stage 1);
+      // different events stay separate.
+      tag: String(event.id),
     };
     const r = await send(sub.ch, contactOf(sub), msg);
     if (r.status === 'gone') await deleteSubscriber(sub.id);

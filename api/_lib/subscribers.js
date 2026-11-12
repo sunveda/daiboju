@@ -4,11 +4,16 @@
 import { store } from './store.js';
 import { decrypt, encrypt, keyedHash, randomId } from './crypto.js';
 
-const lookupKey = (ch, contact) => `lookup:${ch}:${keyedHash('lookup', `${ch}:${contact}`)}`;
+// Web Push subscriptions are identified by their endpoint (the keys and expiry can be re-serialised).
+const contactKey = (ch, contact) => {
+  if (ch !== 'webpush') return String(contact);
+  try { return (typeof contact === 'string' ? JSON.parse(contact) : contact).endpoint || String(contact); } catch { return String(contact); }
+};
+const lookupKey = (ch, contact) => `lookup:${ch}:${keyedHash('lookup', `${ch}:${contactKey(ch, contact)}`)}`;
 
 export async function upsertSubscriber({ ch, contact, lang, pref, drill = false }) {
   const s = store();
-  const lk = lookupKey(ch, typeof contact === 'string' ? contact : JSON.stringify(contact));
+  const lk = lookupKey(ch, contact);
   const existingId = await s.get(lk);
   if (existingId) await deleteSubscriber(existingId);
 
