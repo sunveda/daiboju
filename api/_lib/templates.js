@@ -4,9 +4,10 @@
 
 export const LANGUAGES = {
   en: 'English', ja: '日本語', zh: '中文(简体)', ko: '한국어', vi: 'Tiếng Việt', pt: 'Português', es: 'Español',
-  // Argon-only: the first alert falls back to English, the next steps are written in this language.
-  ne: 'नेपाली', id: 'Bahasa Indonesia', th: 'ไทย', tl: 'Tagalog', my: 'မြန်မာ', hi: 'हिन्दी', fr: 'Français', de: 'Deutsch',
 };
+// Only languages with a full emergency UI are offered: first-alert templates here AND the /go page
+// labels in public/go.html. Planned next, after native-speaker review of both:
+//   ne नेपाली, id Bahasa Indonesia, th ไทย, tl Tagalog, my မြန်မာ, hi हिन्दी, fr Français, de Deutsch
 export const TEMPLATE_LANGS = ['en', 'ja', 'zh', 'ko', 'vi', 'pt', 'es'];
 
 const STAGE1 = {

@@ -22,7 +22,7 @@ Foreign residents, tourists, students and workers in Japan who cannot read Japan
 | Principle | What it means in code |
 |---|---|
 | **Minimal data** | A subscriber is `{channel, encrypted contact, language, prefecture, drill flag}`. No name, no account, no stored location. |
-| **Location never leaves the phone** | `/go` computes the nearest site in the browser. The server never receives coordinates. |
+| **Location never leaves the phone** | `/go` computes the nearest site in the browser. The server never receives coordinates. To do that, the phone downloads the public GSI map tiles around it, so GSI can infer the approximate area (about 40 km); the pages say so. |
 | **AI never sees a person** | Argon is called once per *(event, prefecture, language)*, with official data only. |
 | **Rules decide, AI explains** | `decideAction()` in `api/_lib/hazards.js` is the only place that decides what people should do. Argon is told the action and may not change it. |
 | **Never block on AI** | First alert = templates. Second alert falls back to templates if Argon is missing, slow (25 s timeout) or returns invalid JSON. |
@@ -285,7 +285,7 @@ In priority order. Each item lists where to work and how to know it's done.
 3. **Web push on real phones**, including iOS (requires "Add to Home Screen"). Show a short how-to on iOS.
 4. **Cancellation and updates.** When P2P sends `cancelled: true` (EEW or tsunami), send a short "cancelled / 解除" message to the same prefectures. When a tsunami warning is downgraded, send the new action.
 5. **Translate the sign-up page** (`index.html`) into the 7 template languages; the `/go` page is already done.
-6. **Native-speaker review** of every stage-1 text and the `/go` UI strings, then add Nepali, Indonesian, Thai, Tagalog, Burmese templates (common resident languages).
+6. **Native-speaker review** of every stage-1 text and the `/go` UI strings, then add Nepali, Indonesian, Thai, Tagalog and Burmese (common resident languages). A language is offered only when it has both first-alert templates and `/go` labels (see `LANGUAGES` in `templates.js`).
 7. **Complete the tsunami region map** in `areas.js` against JMA's 66 forecast regions.
 8. **Ward-level areas** (市区町村). P2P `points[].addr` gives municipality names; add an optional ward on sign-up and filter by it, so Tokyo users aren't alerted for Okutama.
 9. **Scale the fan-out.** Sending is done inside one function call; fine for thousands. Beyond that, enqueue per-chunk jobs (Upstash QStash or Cloud Tasks) and keep stage 1 first.
