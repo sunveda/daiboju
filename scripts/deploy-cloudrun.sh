@@ -39,12 +39,25 @@ gcloud projects add-iam-policy-binding "$PROJECT" --quiet >/dev/null \
   --member="serviceAccount:${NUMBER}-compute@developer.gserviceaccount.com" --role=roles/run.builder
 echo "  · Cloud Build can build the container"
 
+# --set-env-vars replaces every variable, so keep the deployed launch-gate and dry-run values
+# unless this run sets them (first deploy: sign-up closed, messages simulated).
+deployed() { # deployed <NAME> <default>
+  gcloud run services describe "$SERVICE" --region "$REGION" --format=json 2>/dev/null | node -e '
+    let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
+      let v; try { v = (JSON.parse(s).spec.template.spec.containers[0].env || []).find((e) => e.name === process.argv[1])?.value; } catch {}
+      process.stdout.write(v ?? process.argv[2]);
+    });' "$1" "$2"
+}
+CHANNELS_DRY_RUN="${CHANNELS_DRY_RUN:-$(deployed CHANNELS_DRY_RUN 1)}"
+SIGNUP_OPEN="${SIGNUP_OPEN:-$(deployed SIGNUP_OPEN 0)}"
+echo "▶ Sign-up open: $SIGNUP_OPEN · simulated messages: $CHANNELS_DRY_RUN"
+
 echo "▶ Building and deploying (3–5 minutes)"
 # One always-on instance: it holds the earthquake WebSocket and the in-memory store.
 gcloud run deploy "$SERVICE" --source . --region "$REGION" --quiet \
   --allow-unauthenticated --min-instances 1 --max-instances 1 --no-cpu-throttling \
   --memory 512Mi --timeout 60 \
-  --set-env-vars "CHANNELS_DRY_RUN=${CHANNELS_DRY_RUN:-1},SIGNUP_OPEN=${SIGNUP_OPEN:-0},GEMINI_MODEL=gemini-4-argon,GEMINI_THINKING_LEVEL=low,ALLOWED_ORIGINS=https://sunveda.tech" \
+  --set-env-vars "CHANNELS_DRY_RUN=${CHANNELS_DRY_RUN},SIGNUP_OPEN=${SIGNUP_OPEN},GEMINI_MODEL=gemini-4-argon,GEMINI_THINKING_LEVEL=low,ALLOWED_ORIGINS=https://sunveda.tech" \
   --set-secrets "DATA_KEY=daiboju-data-key:latest,DRILL_SECRET=daiboju-drill-secret:latest,INGEST_SECRET=daiboju-ingest-secret:latest,GEMINI_API_KEY=gemini-api-key:latest"
 
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"

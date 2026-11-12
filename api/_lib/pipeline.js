@@ -83,6 +83,10 @@ async function stage2(event, baseUrl, publicUrl, report) {
   return { areas };
 }
 
+// An earthquake early warning (eew-<eventId>) and the detailed report that follows (eq-<time>)
+// share the same digits, so they share one notification; other events keep their own id.
+export const notificationTag = (event) => String(event.id).replace(/^(eew|eq)-/, 'quake-');
+
 async function deliver(subs, build, { event, area, stage, baseUrl, report }) {
   const cache = new Map();
   const results = await Promise.allSettled(subs.map(async (sub) => {
@@ -93,10 +97,12 @@ async function deliver(subs, build, { event, area, stage, baseUrl, report }) {
       unsubLabel: ui('stop', sub.lang),
       // Push notifications for the same event replace each other (stage 2 updates stage 1);
       // different events stay separate.
-      tag: String(event.id),
+      tag: notificationTag(event),
     };
     const r = await send(sub.ch, contactOf(sub), msg);
-    if (r.status === 'gone') await deleteSubscriber(sub.id);
+    // The address expired. A browser may still renew a push subscription, so keep a short-lived,
+    // contact-free renewal note for it (an explicit unsubscribe leaves none).
+    if (r.status === 'gone') await deleteSubscriber(sub.id, { renewable: sub.ch === 'webpush' });
     return { ch: sub.ch, lang: sub.lang, pref: area.prefCode, stage, status: r.status, error: r.error };
   }));
   for (const r of results) report.deliveries.push(r.status === 'fulfilled' ? r.value : { status: 'error', error: String(r.reason) });

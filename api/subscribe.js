@@ -6,7 +6,7 @@ import { store } from './_lib/store.js';
 import { prefByCode } from './_lib/areas.js';
 import { LANGUAGES } from './_lib/templates.js';
 import { CHANNELS, validContact } from './_lib/channels.js';
-import { upsertSubscriber, unsubToken, findSubscriber, deleteSubscriber } from './_lib/subscribers.js';
+import { upsertSubscriber, unsubToken, takeRenewable, deleteSubscriber } from './_lib/subscribers.js';
 import { randomCode } from './_lib/crypto.js';
 
 export const signupOpen = () => process.env.SIGNUP_OPEN === '1';
@@ -22,10 +22,11 @@ export async function POST(request) {
   // who deleted their data is never re-subscribed. The new record replaces the old one.
   if (renews !== undefined) {
     if (channel !== 'webpush' || typeof renews !== 'string' || !validContact('webpush', contact)) return json({ error: 'Invalid renewal' }, 400);
-    const old = await findSubscriber('webpush', { endpoint: renews });
+    // A record that expired before the browser renewed it left a short-lived note; an unsubscribe left none.
+    const old = await takeRenewable('webpush', { endpoint: renews });
     if (!old) return json({ error: 'Subscription no longer exists' }, 410);
     await upsertSubscriber({ ch: 'webpush', contact, lang: old.lang, pref: old.pref, drill: old.drill });
-    await deleteSubscriber(old.id);
+    if (old.id) await deleteSubscriber(old.id);
     return json({ ok: true, channel, renewed: true });
   }
   // Launch gate, enforced here and not only in the page: until SIGNUP_OPEN=1 (set once the

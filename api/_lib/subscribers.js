@@ -43,14 +43,35 @@ export async function findSubscriber(ch, contact) {
   return id ? getSubscriber(id) : null;
 }
 
-export async function deleteSubscriber(id) {
+// renewable: the address expired (not an unsubscribe). Keep only language, area and drill choice
+// under the hashed lookup key for 30 days, so a browser's push renewal can restore the record.
+export async function deleteSubscriber(id, { renewable = false } = {}) {
   const s = store();
   const sub = await getSubscriber(id);
   if (!sub) return false;
   await s.srem(`area:${sub.pref}`, id);
   await s.del(`sub:${id}`);
-  if (sub.lk) await s.del(sub.lk);
+  if (sub.lk) {
+    await s.del(sub.lk);
+    if (renewable) await s.set(`renew:${sub.lk}`, JSON.stringify({ lang: sub.lang, pref: sub.pref, drill: sub.drill }), { ex: 30 * 24 * 3600 });
+    else await s.del(`renew:${sub.lk}`);
+  }
   return true;
+}
+
+// For a push renewal: the live record for this old subscription, or the note left when it expired.
+export async function takeRenewable(ch, contact) {
+  const s = store();
+  const lk = lookupKey(ch, contact);
+  const id = await s.get(lk);
+  if (id) {
+    const sub = await getSubscriber(id);
+    if (sub) return { lang: sub.lang, pref: sub.pref, drill: sub.drill, id };
+  }
+  const note = await s.get(`renew:${lk}`);
+  if (!note) return null;
+  await s.del(`renew:${lk}`);
+  return JSON.parse(note);
 }
 
 export async function subscribersIn(prefCode, { drill = false } = {}) {

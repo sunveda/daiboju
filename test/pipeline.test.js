@@ -221,3 +221,28 @@ test('push renewal replaces an existing record and never revives a deleted one',
   assert.equal(again.status, 410);
   assert.equal(await findSubscriber('webpush', pushSub('newer')), null);
 });
+
+test('a push record that expired can still be renewed; the note holds no contact', async () => {
+  const { findSubscriber, deleteSubscriber } = await import('../api/_lib/subscribers.js');
+  const pushSub = (n) => ({ endpoint: `https://push.example/${n}`, expirationTime: null, keys: { p256dh: 'p', auth: 'a' } });
+  await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('exp'), lang: 'vi', pref: '27' }));
+  const old = await findSubscriber('webpush', pushSub('exp'));
+  await deleteSubscriber(old.id, { renewable: true }); // delivery said 410 before the browser renewed
+  assert.equal(await findSubscriber('webpush', pushSub('exp')), null);
+
+  const r = await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('exp2'), lang: 'en', pref: '13', renews: 'https://push.example/exp' }));
+  assert.equal(r.status, 200);
+  const renewed = await findSubscriber('webpush', pushSub('exp2'));
+  assert.equal(renewed.lang, 'vi');
+  assert.equal(renewed.pref, '27');
+  // The note is single-use.
+  const again = await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('exp3'), lang: 'vi', pref: '27', renews: 'https://push.example/exp' }));
+  assert.equal(again.status, 410);
+});
+
+test('an earthquake warning and its detailed report share one notification tag', async () => {
+  const { notificationTag } = await import('../api/_lib/pipeline.js');
+  assert.equal(notificationTag({ id: 'eew-20261112175800' }), notificationTag({ id: 'eq-20261112175800' }));
+  assert.notEqual(notificationTag({ id: 'eq-20261112175800' }), notificationTag({ id: 'eq-20261112180500' }));
+  assert.equal(notificationTag({ id: 'tsunami-1' }), 'tsunami-1');
+});
