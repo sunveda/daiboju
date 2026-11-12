@@ -258,6 +258,7 @@ The pages in `public/` are path-relative and read the API origin from `public/co
 The same files are served at **https://sunveda.tech/app/daiboju/** (GitHub Pages, repo `sunveda/sunveda.tech`, folder `app/daiboju/`) with a `config.js` that points at the Vercel deployment.
 - Vercel env: `BASE_URL` = the Vercel URL (unsubscribe links), `PUBLIC_URL=https://sunveda.tech/app/daiboju` (links in messages).
 - `vercel.json` allows CORS from `https://sunveda.tech` for the browser-facing endpoints (`config`, `subscribe`, `unsubscribe`, `guidance`, `drill`). `ingest` and `line-webhook` stay server-to-server.
+- **Launch gate:** `window.DAIBOJU_SIGNUP_OPEN` in `config.js`. The sunveda.tech copy sets it to `false` until that site's privacy policy covers Daiboju; the page then shows "Sign-up opens soon" and sends nothing.
 - **Sync:** after changing `public/`, copy every file except `config.js` into `sunveda.tech/app/daiboju/` and open a PR there (assigned to `sunveda`, footer version updated).
 
 ---
