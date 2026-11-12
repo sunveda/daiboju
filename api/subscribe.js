@@ -9,6 +9,8 @@ import { CHANNELS, validContact } from './_lib/channels.js';
 import { upsertSubscriber, unsubToken } from './_lib/subscribers.js';
 import { randomCode } from './_lib/crypto.js';
 
+export const signupOpen = () => process.env.SIGNUP_OPEN === '1';
+
 export async function POST(request) {
   const s = store();
   if ((await s.incr(`rl:sub:${clientIp(request)}`, 3600)) > 30) return json({ error: 'Too many requests' }, 429);
@@ -16,6 +18,9 @@ export async function POST(request) {
   const body = await readJson(request);
   if (!body) return json({ error: 'Invalid JSON' }, 400);
   const { channel, contact, lang, pref, drill } = body;
+  // Launch gate, enforced here and not only in the page: until SIGNUP_OPEN=1 (set once the
+  // privacy policy covers alert contacts) only drill opt-ins are accepted.
+  if (!drill && !signupOpen()) return json({ error: 'Sign-up is not open yet' }, 403);
 
   if (!CHANNELS.includes(channel)) return json({ error: 'Unknown channel' }, 400);
   if (!LANGUAGES[lang]) return json({ error: 'Unsupported language' }, 400);

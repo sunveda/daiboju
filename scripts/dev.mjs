@@ -13,6 +13,7 @@ if (existsSync(envFile)) {
   }
 }
 process.env.CHANNELS_DRY_RUN ??= '1';
+process.env.SIGNUP_OPEN ??= '1';
 process.env.DRILL_SECRET ||= 'drill';
 process.env.INGEST_SECRET ||= 'ingest';
 process.env.PORT ||= '3000';

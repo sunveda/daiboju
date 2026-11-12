@@ -31,6 +31,8 @@ The script:
 
 Messages are **simulated** by default (`CHANNELS_DRY_RUN=1`): the drill console shows exactly what each language would receive, without sending anything.
 
+Sign-up is **closed** by default (`SIGNUP_OPEN=0`): `/api/subscribe` accepts only drill opt-ins, so contacts are not collected before the privacy policy covers them. Open it with `SIGNUP_OPEN=1 ./scripts/deploy-cloudrun.sh` at launch.
+
 ## 4. Check it
 
 ```bash

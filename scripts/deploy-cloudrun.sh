@@ -44,7 +44,7 @@ echo "▶ Building and deploying (3–5 minutes)"
 gcloud run deploy "$SERVICE" --source . --region "$REGION" --quiet \
   --allow-unauthenticated --min-instances 1 --max-instances 1 --no-cpu-throttling \
   --memory 512Mi --timeout 60 \
-  --set-env-vars "CHANNELS_DRY_RUN=${CHANNELS_DRY_RUN:-1},GEMINI_MODEL=gemini-4-argon,GEMINI_THINKING_LEVEL=low,ALLOWED_ORIGINS=https://sunveda.tech" \
+  --set-env-vars "CHANNELS_DRY_RUN=${CHANNELS_DRY_RUN:-1},SIGNUP_OPEN=${SIGNUP_OPEN:-0},GEMINI_MODEL=gemini-4-argon,GEMINI_THINKING_LEVEL=low,ALLOWED_ORIGINS=https://sunveda.tech" \
   --set-secrets "DATA_KEY=daiboju-data-key:latest,DRILL_SECRET=daiboju-drill-secret:latest,INGEST_SECRET=daiboju-ingest-secret:latest,GEMINI_API_KEY=gemini-api-key:latest"
 
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"

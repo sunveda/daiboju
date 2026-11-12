@@ -3,6 +3,7 @@ import { json } from './_lib/http.js';
 import { CHANNELS, configured } from './_lib/channels.js';
 import { LANGUAGES, TEMPLATE_LANGS } from './_lib/templates.js';
 import { PREFECTURES } from './_lib/areas.js';
+import { signupOpen } from './subscribe.js';
 
 export function GET() {
   return json({
@@ -10,6 +11,7 @@ export function GET() {
     lineAddUrl: process.env.LINE_ADD_URL || null,
     channels: Object.fromEntries(CHANNELS.map((c) => [c, Boolean(configured(c))])),
     dryRun: process.env.CHANNELS_DRY_RUN === '1',
+    signupOpen: signupOpen(),
     languages: LANGUAGES,
     templateLanguages: TEMPLATE_LANGS,
     prefectures: PREFECTURES.map(({ code, ja, en }) => ({ code, ja, en })),

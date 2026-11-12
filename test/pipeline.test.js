@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 
 process.env.CHANNELS_DRY_RUN = '1';
+process.env.SIGNUP_OPEN = '1';
 process.env.INGEST_SECRET = 'ingest-secret';
 process.env.DRILL_SECRET = 'drill-secret';
 process.env.BASE_URL = 'https://daiboju.test';
@@ -184,4 +185,19 @@ test('LINE: signature check, code linking, STOP deletes', async () => {
   await hook([{ type: 'message', replyToken: 'r', source: { userId: 'U123' }, message: { type: 'text', text: 'STOP' } }]);
   assert.equal(await findSubscriber('line', 'U123'), null);
   delete process.env.LINE_CHANNEL_SECRET;
+});
+
+test('sign-up gate: closed service accepts only drill opt-ins', async () => {
+  const config = await import('../api/config.js');
+  process.env.SIGNUP_OPEN = '0';
+  try {
+    const real = await subscribe.POST(post('/api/subscribe', { channel: 'email', contact: 'gate@example.com', lang: 'en', pref: '13' }));
+    assert.equal(real.status, 403);
+    const drillOnly = await subscribe.POST(post('/api/subscribe', { channel: 'email', contact: 'gate@example.com', lang: 'en', pref: '13', drill: true }));
+    assert.equal(drillOnly.status, 200);
+    assert.equal((await config.GET().json()).signupOpen, false);
+  } finally {
+    process.env.SIGNUP_OPEN = '1';
+  }
+  assert.equal((await config.GET().json()).signupOpen, true);
 });
