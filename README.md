@@ -11,6 +11,16 @@ No app to install. No account. We keep only where to send the alert (encrypted),
 
 The name is how a two-year-old says *daijōbu*, "it's okay".
 
+## Deploy (Google Cloud Run)
+
+```bash
+gcloud config set project <YOUR_PROJECT_ID>
+git clone https://github.com/sunveda/daiboju && cd daiboju
+./scripts/deploy-cloudrun.sh
+```
+
+One always-on service in Tokyo serves the pages, the API and the live earthquake listener. See **[DEPLOY.md](DEPLOY.md)**.
+
 ## Quick start
 
 ```bash
@@ -25,7 +35,7 @@ npm run dev        # http://localhost:3000
 ## How it works
 
 ```
-JMA data → P2P地震情報 → listener (Cloud Run) → /api/ingest (Vercel)
+JMA data → P2P地震情報 → Daiboju on Cloud Run (listener + API in one service)
    → stage 1: template alert  → push · LINE · email · SMS · WhatsApp
    → stage 2: rules pick the action → Gemini 4 Argon writes it per language → link to /go
 /go → nearest evacuation site computed on the phone → Google Maps walking route

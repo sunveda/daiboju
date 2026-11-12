@@ -60,7 +60,7 @@ Foreign residents, tourists, students and workers in Japan who cannot read Japan
    sub:*, area:*, lookup:*, evt:*, guide:*…    GSI evacuation-site tiles + Google Maps directions link
 ```
 
-Why a separate listener: Vercel functions can't hold a WebSocket open, and Vercel Hobby cron runs only once a day. A tiny always-on process on **Cloud Run** (min-instances 1, CPU always allocated) holds the socket and forwards each message.
+On **Cloud Run** (the primary deployment) the listener runs inside the same always-on service as the API (`server.mjs`, `LISTENER=1`, min/max instances 1, CPU always allocated) and calls the ingest code directly. On Vercel, functions can't hold a WebSocket, so `worker/listener.mjs` runs separately and POSTs to `/api/ingest`.
 
 ---
 
@@ -241,17 +241,9 @@ npm run dev            # http://localhost:3000   (drill secret defaults to "dril
 Local check: open `/?drill=1`, sign up any email, open `/demo`, enter the drill secret, run a scenario. With `CHANNELS_DRY_RUN=1` nothing is sent; the console shows both messages per language.
 
 ### Deploy
-1. **Vercel:** import `sunveda/daiboju`. No build step. Add env vars from `.env.example`. Add **Upstash Redis** from the Vercel Marketplace (it sets `KV_REST_API_URL` / `KV_REST_API_TOKEN`, which `store.js` reads).
-2. **Gemini:** create a key in Google AI Studio, set `GEMINI_API_KEY` (Argon is not on the free tier; use the event's Cloud credits).
-3. **Listener on Cloud Run:**
-   ```bash
-   cd worker
-   gcloud run deploy daiboju-listener --source . --region asia-northeast1 \
-     --min-instances 1 --max-instances 1 --no-cpu-throttling --no-allow-unauthenticated \
-     --set-env-vars INGEST_URL=https://<app>.vercel.app/api/ingest,INGEST_SECRET=<same as Vercel>
-   ```
-4. **LINE:** create a Messaging API channel, set the webhook URL to `https://<app>.vercel.app/api/line-webhook`, enable webhooks, disable auto-reply.
-5. Set `CHANNELS_DRY_RUN=0` only after a drill to your own phone works.
+**Primary: Google Cloud Run** — one always-on service (`server.mjs`) serves the pages and API and runs the P2P listener in-process (`LISTENER=1`). From Cloud Shell: `./scripts/deploy-cloudrun.sh`. Full steps, secrets and channel setup: **[DEPLOY.md](DEPLOY.md)**.
+
+Alternative: Vercel runs the same `api/` handlers (`vercel.json`), with `worker/listener.mjs` deployed separately because Vercel can't hold a WebSocket.
 
 ### Hosting the pages on sunveda.tech
 The pages in `public/` are path-relative and read the API origin from `public/config.js`.

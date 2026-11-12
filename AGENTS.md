@@ -16,10 +16,12 @@ Read `SPEC.md` first. The work queue is in SPEC.md §12.
 
 ## Commands
 - `npm test` · run the suite
-- `npm run dev` · local server on :3000 that behaves like Vercel (in-memory store, dry-run channels)
+- `npm run dev` · local server on :3000 (the production server with in-memory store and dry-run channels)
+- `./scripts/deploy-cloudrun.sh` · deploy to Cloud Run from Cloud Shell (see DEPLOY.md)
 - `npm run keys` · generate secrets
 
 ## Conventions
-- Vercel functions in `api/*.js` export `GET` / `POST` taking a Web `Request` and returning a `Response`.
+- Handlers in `api/*.js` export `GET` / `POST` taking a Web `Request` and returning a `Response`. `server.mjs` runs them on Cloud Run (primary) and in `npm run dev`; Vercel can run them too.
+- New API routes must be added to `API_ROUTES` (and `CORS_ROUTES` if the browser calls them) in `server.mjs`.
 - Shared code lives in `api/_lib/` (underscore = not deployed as a function).
 - Commit as small, focused changes with clear messages.
