@@ -1,0 +1,5 @@
+FROM node:22-slim
+WORKDIR /app
+COPY listener.mjs .
+ENV NODE_ENV=production
+CMD ["node", "listener.mjs"]
