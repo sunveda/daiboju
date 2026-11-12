@@ -6,7 +6,7 @@ import { store } from './_lib/store.js';
 import { prefByCode } from './_lib/areas.js';
 import { LANGUAGES } from './_lib/templates.js';
 import { CHANNELS, validContact } from './_lib/channels.js';
-import { upsertSubscriber, unsubToken, takeRenewable, deleteSubscriber } from './_lib/subscribers.js';
+import { upsertSubscriber, unsubToken, takeRenewable, dropRenewalNote, deleteSubscriber } from './_lib/subscribers.js';
 import { randomCode } from './_lib/crypto.js';
 
 export const signupOpen = () => process.env.SIGNUP_OPEN === '1';
@@ -26,6 +26,7 @@ export async function POST(request) {
     const old = await takeRenewable('webpush', { endpoint: renews });
     if (!old) return json({ error: 'Subscription no longer exists' }, 410);
     await upsertSubscriber({ ch: 'webpush', contact, lang: old.lang, pref: old.pref, drill: old.drill });
+    await dropRenewalNote(old.noteKey); // only after the new record exists, so a failed renewal can retry
     if (old.id) await deleteSubscriber(old.id);
     return json({ ok: true, channel, renewed: true });
   }

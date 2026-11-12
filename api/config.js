@@ -15,7 +15,7 @@ export function GET() {
     languages: LANGUAGES,
     templateLanguages: TEMPLATE_LANGS,
     prefectures: PREFECTURES.map(({ code, ja, en }) => ({ code, ja, en })),
-  }, 200, { 'Cache-Control': 'public, max-age=300' });
+  }, 200, { 'Cache-Control': 'no-store' }); // dryRun and signupOpen must reflect the current mode
 }
 
 // CORS preflight for the pages hosted at sunveda.tech/app/daiboju (headers come from vercel.json).

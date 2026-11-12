@@ -83,9 +83,14 @@ async function stage2(event, baseUrl, publicUrl, report) {
   return { areas };
 }
 
-// An earthquake early warning (eew-<eventId>) and the detailed report that follows (eq-<time>)
-// share the same digits, so they share one notification; other events keep their own id.
-export const notificationTag = (event) => String(event.id).replace(/^(eew|eq)-/, 'quake-');
+// An earthquake early warning (eew-<eventId>) and the detailed report that follows (eq-<origin time>)
+// share one notification. Both ids start with the origin time, but the EEW id can differ in the
+// seconds (eventId 20220811005302 vs origin 2022/08/11 00:53:00), so match on the minute.
+// Other events keep their own id.
+export const notificationTag = (event) => {
+  const m = String(event.id).match(/^(?:eew|eq)-(\d{12})\d*$/);
+  return m ? `quake-${m[1]}` : String(event.id);
+};
 
 async function deliver(subs, build, { event, area, stage, baseUrl, report }) {
   const cache = new Map();

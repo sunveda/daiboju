@@ -243,6 +243,8 @@ test('a push record that expired can still be renewed; the note holds no contact
 test('an earthquake warning and its detailed report share one notification tag', async () => {
   const { notificationTag } = await import('../api/_lib/pipeline.js');
   assert.equal(notificationTag({ id: 'eew-20261112175800' }), notificationTag({ id: 'eq-20261112175800' }));
+  // Real P2P data: EEW eventId 20220811005302, detailed report origin time 2022/08/11 00:53:00.
+  assert.equal(notificationTag({ id: 'eew-20220811005302' }), notificationTag({ id: 'eq-20220811005300' }));
   assert.notEqual(notificationTag({ id: 'eq-20261112175800' }), notificationTag({ id: 'eq-20261112180500' }));
   assert.equal(notificationTag({ id: 'tsunami-1' }), 'tsunami-1');
 });

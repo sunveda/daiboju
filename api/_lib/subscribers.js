@@ -72,8 +72,12 @@ export async function takeRenewable(ch, contact) {
   }
   const note = await s.get(`renew:${lk}`);
   if (!note) return null;
-  await s.del(`renew:${lk}`);
-  return JSON.parse(note);
+  return { ...JSON.parse(note), noteKey: `renew:${lk}` };
+}
+
+// Consume a renewal note only once its replacement record is stored.
+export async function dropRenewalNote(noteKey) {
+  if (noteKey) await store().del(noteKey);
 }
 
 export async function subscribersIn(prefCode, { drill = false } = {}) {
