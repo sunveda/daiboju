@@ -33,6 +33,11 @@ NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
 gcloud projects add-iam-policy-binding "$PROJECT" --quiet >/dev/null \
   --member="serviceAccount:${NUMBER}-compute@developer.gserviceaccount.com" --role=roles/secretmanager.secretAccessor
 echo "  · Cloud Run can read the secrets"
+# New projects build source deploys with the default compute service account, which has no
+# build permissions until it gets Cloud Run Builder (read sources, push the image, write logs).
+gcloud projects add-iam-policy-binding "$PROJECT" --quiet >/dev/null \
+  --member="serviceAccount:${NUMBER}-compute@developer.gserviceaccount.com" --role=roles/run.builder
+echo "  · Cloud Build can build the container"
 
 echo "▶ Building and deploying (3–5 minutes)"
 # One always-on instance: it holds the earthquake WebSocket and the in-memory store.
