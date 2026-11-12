@@ -54,7 +54,7 @@ gcloud run services update "$SERVICE" --region "$REGION" --quiet \
 
 echo
 echo "✅ Daiboju is live: $URL"
-echo "   Health:        curl $URL/healthz"
+echo "   Health:        curl $URL/health"
 echo "   Demo sign-up:  $URL/?drill=1"
 echo "   Drill console: $URL/demo   (secret: gcloud secrets versions access latest --secret=daiboju-drill-secret)"
 echo "   Messages are simulated (CHANNELS_DRY_RUN=1). See DEPLOY.md to connect push, email, LINE or SMS."

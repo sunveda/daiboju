@@ -19,7 +19,7 @@ test('serves pages with clean URLs and health', async () => {
   assert.equal(go.status, 200);
   assert.match(go.headers.get('content-type'), /text\/html/);
   assert.equal((await fetch(`${base}/sw.js`)).headers.get('cache-control'), 'no-cache');
-  assert.deepEqual(await (await fetch(`${base}/healthz`)).json(), { ok: true, listener: 'off' });
+  assert.deepEqual(await (await fetch(`${base}/health`)).json(), { ok: true, listener: 'off' });
 });
 
 test('blocks path traversal and unknown API routes', async () => {

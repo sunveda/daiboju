@@ -35,7 +35,7 @@ Messages are **simulated** by default (`CHANNELS_DRY_RUN=1`): the drill console 
 
 ```bash
 URL=$(gcloud run services describe daiboju --region asia-northeast1 --format='value(status.url)')
-curl $URL/healthz        # {"ok":true,"listener":{"connected":true,...}}
+curl $URL/health          # {"ok":true,"listener":{"connected":true,...}}
 gcloud secrets versions access latest --secret=daiboju-drill-secret   # for /demo
 ```
 

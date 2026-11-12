@@ -1,7 +1,7 @@
 // Daiboju production server for Google Cloud Run (also used by `npm run dev`).
 // One process serves everything:
 //   /api/<name>  → api/<name>.js (Web Request → Response handlers; same files Vercel would run)
-//   /healthz     → liveness + listener state
+//   /health      → liveness + listener state (/healthz is reserved by Cloud Run)
 //   everything else → public/ (clean URLs: /go → go.html)
 // With LISTENER=1 it also holds the P2P地震情報 WebSocket and ingests alerts in-process,
 // so no separate worker is needed. Run it as ONE always-on instance (see DEPLOY.md).
@@ -43,7 +43,7 @@ export function createServer() {
     const proto = req.headers['x-forwarded-proto'] || 'http';
     const publicUrl = new URL(url.pathname + url.search, `${proto}://${req.headers.host || `localhost:${port}`}`);
     try {
-      if (url.pathname === '/healthz') {
+      if (url.pathname === '/health') {
         return send(res, 200, JSON.stringify({ ok: true, listener: listener ? { connected: listener.connected, lastMessageAt: listener.lastMessageAt } : 'off' }), 'application/json');
       }
 

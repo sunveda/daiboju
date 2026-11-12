@@ -92,7 +92,7 @@ public/
   demo.html         stage drill console
   sw.js, app.css, icon.svg, manifest.webmanifest
 worker/
-  listener.mjs      P2P WebSocket → /api/ingest, with polling fallback and /healthz
+  listener.mjs      P2P WebSocket → /api/ingest, with polling fallback and /healthz (standalone worker only; the Cloud Run service uses /health)
   Dockerfile        for Cloud Run
 scripts/
   dev.mjs           local server that mimics Vercel (no dependencies)
@@ -273,7 +273,7 @@ The same files are served at **https://sunveda.tech/app/daiboju/** (GitHub Pages
 In priority order. Each item lists where to work and how to know it's done.
 
 1. **JMA weather adapter (typhoon, heavy rain, landslide, volcano).** Today only drills produce non-earthquake events. Poll the JMA XML feed `https://www.data.jma.go.jp/developer/xml/feed/extra.xml` (Atom; 随時 feed) from the listener every 60 s, fetch new 気象警報・注意報 / 土砂災害警戒情報 / 記録的短時間大雨情報 / 噴火警報 entries, and convert to internal events (§5) with a 警戒レベル: 大雨特別警報 → 5, 土砂災害警戒情報 → 4, 大雨警報・洪水警報 → 3. Post `{events:[…]}` to `/api/ingest`. Done when a real warning produces stage 1 + 2 in the drill console. *Verify the feed URL and XML structure first.*
-2. **Verify the external assumptions** in §7 and §9 (thinking level spelling, GSI CORS and property names, P2P production WebSocket URL `wss://api.p2pquake.net/v2/ws`).
+2. **Verify the external assumptions** in §7 and §9 (thinking level spelling, GSI CORS and property names). Verified 2026-11-12 on Cloud Run: the P2P WebSocket `wss://api.p2pquake.net/v2/ws` connects.
 3. **Web push on real phones**, including iOS (requires "Add to Home Screen"). Show a short how-to on iOS.
 4. **Cancellation and updates.** When P2P sends `cancelled: true` (EEW or tsunami), send a short "cancelled / 解除" message to the same prefectures. When a tsunami warning is downgraded, send the new action.
 5. **Translate the sign-up page** (`index.html`) into the 7 template languages; the `/go` page is already done.
@@ -283,7 +283,7 @@ In priority order. Each item lists where to work and how to know it's done.
 9. **Scale the fan-out.** Sending is done inside one function call; fine for thousands. Beyond that, enqueue per-chunk jobs (Upstash QStash or Cloud Tasks) and keep stage 1 first.
 10. **WhatsApp templates** (see §8) and SMS cost controls.
 11. **Legal:** privacy policy page (APPI), terms, a clear "not an official warning service" statement, and contact.
-12. **Observability:** log delivery counts and Argon latency per event; alert the team if the listener's `/healthz` shows `connected:false` for more than 2 minutes.
+12. **Observability:** log delivery counts and Argon latency per event; alert the team if the service's `/health` shows `connected:false` for more than 2 minutes.
 
 ---
 
