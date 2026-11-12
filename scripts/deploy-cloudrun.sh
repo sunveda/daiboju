@@ -42,7 +42,8 @@ echo "  · Cloud Build can build the container"
 # --set-env-vars replaces every variable, so keep the deployed launch-gate and dry-run values
 # unless this run sets them (first deploy: sign-up closed, messages simulated).
 deployed() { # deployed <NAME> <default>
-  gcloud run services describe "$SERVICE" --region "$REGION" --format=json 2>/dev/null | node -e '
+  # No service yet on a first deploy: describe fails, so feed node nothing and use the default.
+  { gcloud run services describe "$SERVICE" --region "$REGION" --format=json 2>/dev/null || true; } | node -e '
     let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
       let v; try { v = (JSON.parse(s).spec.template.spec.containers[0].env || []).find((e) => e.name === process.argv[1])?.value; } catch {}
       process.stdout.write(v ?? process.argv[2]);

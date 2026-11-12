@@ -49,13 +49,15 @@ export async function deleteSubscriber(id, { renewable = false } = {}) {
   const s = store();
   const sub = await getSubscriber(id);
   if (!sub) return false;
-  await s.srem(`area:${sub.pref}`, id);
-  await s.del(`sub:${id}`);
+  // Write the renewal note before removing anything, so a renewal racing this cleanup always
+  // finds either the live record or the note.
   if (sub.lk) {
-    await s.del(sub.lk);
     if (renewable) await s.set(`renew:${sub.lk}`, JSON.stringify({ lang: sub.lang, pref: sub.pref, drill: sub.drill }), { ex: 30 * 24 * 3600 });
     else await s.del(`renew:${sub.lk}`);
   }
+  await s.srem(`area:${sub.pref}`, id);
+  await s.del(`sub:${id}`);
+  if (sub.lk) await s.del(sub.lk);
   return true;
 }
 
