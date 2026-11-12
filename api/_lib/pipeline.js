@@ -83,6 +83,15 @@ async function stage2(event, baseUrl, publicUrl, report) {
   return { areas };
 }
 
+// An earthquake early warning (eew-<eventId>) and the detailed report that follows (eq-<origin time>)
+// share one notification. Both ids start with the origin time, but the EEW id can differ in the
+// seconds (eventId 20220811005302 vs origin 2022/08/11 00:53:00), so match on the minute.
+// Other events keep their own id.
+export const notificationTag = (event) => {
+  const m = String(event.id).match(/^(?:eew|eq)-(\d{12})\d*$/);
+  return m ? `quake-${m[1]}` : String(event.id);
+};
+
 async function deliver(subs, build, { event, area, stage, baseUrl, report }) {
   const cache = new Map();
   const results = await Promise.allSettled(subs.map(async (sub) => {
@@ -91,9 +100,14 @@ async function deliver(subs, build, { event, area, stage, baseUrl, report }) {
       ...cache.get(sub.lang),
       unsubUrl: `${baseUrl}/api/unsubscribe?id=${sub.id}&t=${unsubToken(sub.id)}`,
       unsubLabel: ui('stop', sub.lang),
+      // Push notifications for the same event replace each other (stage 2 updates stage 1);
+      // different events stay separate.
+      tag: notificationTag(event),
     };
     const r = await send(sub.ch, contactOf(sub), msg);
-    if (r.status === 'gone') await deleteSubscriber(sub.id);
+    // The address expired. A browser may still renew a push subscription, so keep a short-lived,
+    // contact-free renewal note for it (an explicit unsubscribe leaves none).
+    if (r.status === 'gone') await deleteSubscriber(sub.id, { renewable: sub.ch === 'webpush' });
     return { ch: sub.ch, lang: sub.lang, pref: area.prefCode, stage, status: r.status, error: r.error };
   }));
   for (const r of results) report.deliveries.push(r.status === 'fulfilled' ? r.value : { status: 'error', error: String(r.reason) });

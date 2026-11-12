@@ -44,7 +44,7 @@ async function webpush(contact, msg) {
   const { default: wp } = await import('web-push');
   wp.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:alerts@example.com', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
   try {
-    await wp.sendNotification(JSON.parse(contact), JSON.stringify({ title: msg.title, body: msg.text, url: msg.url }), { TTL: 3600, urgency: 'high' });
+    await wp.sendNotification(JSON.parse(contact), JSON.stringify({ title: msg.title, body: msg.text, url: msg.url, tag: msg.tag }), { TTL: 3600, urgency: 'high' });
     return { status: 'sent' };
   } catch (err) {
     if (err.statusCode === 404 || err.statusCode === 410) return { status: 'gone' };

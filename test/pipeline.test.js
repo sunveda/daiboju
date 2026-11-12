@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 
 process.env.CHANNELS_DRY_RUN = '1';
+process.env.SIGNUP_OPEN = '1';
 process.env.INGEST_SECRET = 'ingest-secret';
 process.env.DRILL_SECRET = 'drill-secret';
 process.env.BASE_URL = 'https://daiboju.test';
@@ -184,4 +185,66 @@ test('LINE: signature check, code linking, STOP deletes', async () => {
   await hook([{ type: 'message', replyToken: 'r', source: { userId: 'U123' }, message: { type: 'text', text: 'STOP' } }]);
   assert.equal(await findSubscriber('line', 'U123'), null);
   delete process.env.LINE_CHANNEL_SECRET;
+});
+
+test('sign-up gate: closed service accepts only drill opt-ins', async () => {
+  const config = await import('../api/config.js');
+  process.env.SIGNUP_OPEN = '0';
+  try {
+    const real = await subscribe.POST(post('/api/subscribe', { channel: 'email', contact: 'gate@example.com', lang: 'en', pref: '13' }));
+    assert.equal(real.status, 403);
+    const drillOnly = await subscribe.POST(post('/api/subscribe', { channel: 'email', contact: 'gate@example.com', lang: 'en', pref: '13', drill: true }));
+    assert.equal(drillOnly.status, 200);
+    assert.equal((await config.GET().json()).signupOpen, false);
+  } finally {
+    process.env.SIGNUP_OPEN = '1';
+  }
+  assert.equal((await config.GET().json()).signupOpen, true);
+});
+
+test('push renewal replaces an existing record and never revives a deleted one', async () => {
+  const { findSubscriber, deleteSubscriber } = await import('../api/_lib/subscribers.js');
+  const pushSub = (n) => ({ endpoint: `https://push.example/${n}`, expirationTime: null, keys: { p256dh: 'p', auth: 'a' } });
+  await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('old'), lang: 'ko', pref: '13' }));
+  const old = await findSubscriber('webpush', pushSub('old'));
+  assert.ok(old);
+
+  const r = await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('new'), lang: 'en', pref: '27', renews: 'https://push.example/old' }));
+  assert.equal(r.status, 200);
+  assert.equal(await findSubscriber('webpush', pushSub('old')), null, 'old record removed');
+  const renewed = await findSubscriber('webpush', pushSub('new'));
+  assert.equal(renewed.lang, 'ko', 'keeps the stored language, not the one sent');
+  assert.equal(renewed.pref, '13');
+
+  await deleteSubscriber(renewed.id); // the person deletes their data
+  const again = await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('newer'), lang: 'ko', pref: '13', renews: 'https://push.example/new' }));
+  assert.equal(again.status, 410);
+  assert.equal(await findSubscriber('webpush', pushSub('newer')), null);
+});
+
+test('a push record that expired can still be renewed; the note holds no contact', async () => {
+  const { findSubscriber, deleteSubscriber } = await import('../api/_lib/subscribers.js');
+  const pushSub = (n) => ({ endpoint: `https://push.example/${n}`, expirationTime: null, keys: { p256dh: 'p', auth: 'a' } });
+  await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('exp'), lang: 'vi', pref: '27' }));
+  const old = await findSubscriber('webpush', pushSub('exp'));
+  await deleteSubscriber(old.id, { renewable: true }); // delivery said 410 before the browser renewed
+  assert.equal(await findSubscriber('webpush', pushSub('exp')), null);
+
+  const r = await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('exp2'), lang: 'en', pref: '13', renews: 'https://push.example/exp' }));
+  assert.equal(r.status, 200);
+  const renewed = await findSubscriber('webpush', pushSub('exp2'));
+  assert.equal(renewed.lang, 'vi');
+  assert.equal(renewed.pref, '27');
+  // The note is single-use.
+  const again = await subscribe.POST(post('/api/subscribe', { channel: 'webpush', contact: pushSub('exp3'), lang: 'vi', pref: '27', renews: 'https://push.example/exp' }));
+  assert.equal(again.status, 410);
+});
+
+test('an earthquake warning and its detailed report share one notification tag', async () => {
+  const { notificationTag } = await import('../api/_lib/pipeline.js');
+  assert.equal(notificationTag({ id: 'eew-20261112175800' }), notificationTag({ id: 'eq-20261112175800' }));
+  // Real P2P data: EEW eventId 20220811005302, detailed report origin time 2022/08/11 00:53:00.
+  assert.equal(notificationTag({ id: 'eew-20220811005302' }), notificationTag({ id: 'eq-20220811005300' }));
+  assert.notEqual(notificationTag({ id: 'eq-20261112175800' }), notificationTag({ id: 'eq-20261112180500' }));
+  assert.equal(notificationTag({ id: 'tsunami-1' }), 'tsunami-1');
 });

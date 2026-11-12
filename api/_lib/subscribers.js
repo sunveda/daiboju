@@ -4,11 +4,16 @@
 import { store } from './store.js';
 import { decrypt, encrypt, keyedHash, randomId } from './crypto.js';
 
-const lookupKey = (ch, contact) => `lookup:${ch}:${keyedHash('lookup', `${ch}:${contact}`)}`;
+// Web Push subscriptions are identified by their endpoint (the keys and expiry can be re-serialised).
+const contactKey = (ch, contact) => {
+  if (ch !== 'webpush') return String(contact);
+  try { return (typeof contact === 'string' ? JSON.parse(contact) : contact).endpoint || String(contact); } catch { return String(contact); }
+};
+const lookupKey = (ch, contact) => `lookup:${ch}:${keyedHash('lookup', `${ch}:${contactKey(ch, contact)}`)}`;
 
 export async function upsertSubscriber({ ch, contact, lang, pref, drill = false }) {
   const s = store();
-  const lk = lookupKey(ch, typeof contact === 'string' ? contact : JSON.stringify(contact));
+  const lk = lookupKey(ch, contact);
   const existingId = await s.get(lk);
   if (existingId) await deleteSubscriber(existingId);
 
@@ -38,14 +43,41 @@ export async function findSubscriber(ch, contact) {
   return id ? getSubscriber(id) : null;
 }
 
-export async function deleteSubscriber(id) {
+// renewable: the address expired (not an unsubscribe). Keep only language, area and drill choice
+// under the hashed lookup key for 30 days, so a browser's push renewal can restore the record.
+export async function deleteSubscriber(id, { renewable = false } = {}) {
   const s = store();
   const sub = await getSubscriber(id);
   if (!sub) return false;
+  // Write the renewal note before removing anything, so a renewal racing this cleanup always
+  // finds either the live record or the note.
+  if (sub.lk) {
+    if (renewable) await s.set(`renew:${sub.lk}`, JSON.stringify({ lang: sub.lang, pref: sub.pref, drill: sub.drill }), { ex: 30 * 24 * 3600 });
+    else await s.del(`renew:${sub.lk}`);
+  }
   await s.srem(`area:${sub.pref}`, id);
   await s.del(`sub:${id}`);
   if (sub.lk) await s.del(sub.lk);
   return true;
+}
+
+// For a push renewal: the live record for this old subscription, or the note left when it expired.
+export async function takeRenewable(ch, contact) {
+  const s = store();
+  const lk = lookupKey(ch, contact);
+  const id = await s.get(lk);
+  if (id) {
+    const sub = await getSubscriber(id);
+    if (sub) return { lang: sub.lang, pref: sub.pref, drill: sub.drill, id };
+  }
+  const note = await s.get(`renew:${lk}`);
+  if (!note) return null;
+  return { ...JSON.parse(note), noteKey: `renew:${lk}` };
+}
+
+// Consume a renewal note only once its replacement record is stored.
+export async function dropRenewalNote(noteKey) {
+  if (noteKey) await store().del(noteKey);
 }
 
 export async function subscribersIn(prefCode, { drill = false } = {}) {
