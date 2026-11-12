@@ -8,6 +8,7 @@
     "node": "22.x"
   },
   "scripts": {
+    "start": "node server.mjs",
     "dev": "node scripts/dev.mjs",
     "test": "node --test test/*.test.js",
     "keys": "node scripts/keys.mjs",
