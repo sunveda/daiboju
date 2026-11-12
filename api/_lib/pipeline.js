@@ -64,7 +64,7 @@ async function stage2(event, baseUrl, publicUrl, report) {
       return [lang, g];
     })));
 
-    const link = (lang) => `${publicUrl}/go?e=${encodeURIComponent(event.id)}&p=${area.prefCode}&l=${lang}`;
+    const link = (lang) => `${publicUrl}/go?e=${encodeURIComponent(event.id)}&p=${area.prefCode}&l=${lang}&h=${event.hazard}`;
     const build = (lang) => {
       const g = guidance[lang];
       return {

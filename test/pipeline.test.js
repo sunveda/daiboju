@@ -118,6 +118,7 @@ test('validation rejects bad input', async () => {
     { channel: 'email', contact: 'not-an-email', lang: 'en', pref: '13' },
     { channel: 'sms', contact: '090-1234', lang: 'en', pref: '13' },
     { channel: 'email', contact: 'a@b.co', lang: 'xx', pref: '13' },
+    { channel: 'email', contact: 'a@b.co', lang: 'ne', pref: '13' }, // no full emergency UI yet
     { channel: 'email', contact: 'a@b.co', lang: 'en', pref: '99' },
   ]) assert.equal((await subscribe.POST(post('/api/subscribe', body))).status, 400, JSON.stringify(body));
 });
@@ -130,6 +131,7 @@ test('drills only reach drill subscribers and are labelled', async () => {
   assert.equal(r.deliveries.length, 2); // stage 1 + stage 2, to the one drill subscriber
   assert.ok(r.deliveries.every((d) => d.lang === 'ko'));
   assert.ok(r.previews.find((p) => p.stage === 1).text.startsWith('【훈련】'));
+  assert.match(r.previews.find((p) => p.stage === 2).link, /&h=earthquake$/, 'links carry the hazard for the outage fallback');
   for (const s of ['chiba-tsunami', 'okinawa-typhoon', 'kumamoto-rain']) {
     const x = await (await drill.POST(post('/api/drill', { secret: 'drill-secret', scenario: s }))).json();
     assert.ok(x.ok && x.previews.length > 0, s);
