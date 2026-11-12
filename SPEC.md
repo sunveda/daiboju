@@ -26,7 +26,7 @@ Foreign residents, tourists, students and workers in Japan who cannot read Japan
 | **AI never sees a person** | Argon is called once per *(event, prefecture, language)*, with official data only. |
 | **Rules decide, AI explains** | `decideAction()` in `api/_lib/hazards.js` is the only place that decides what people should do. Argon is told the action and may not change it. |
 | **Never block on AI** | First alert = templates. Second alert falls back to templates if Argon is missing, slow (25 s timeout) or returns invalid JSON. |
-| **One-tap delete** | Every message carries an unsubscribe link; LINE users can send `STOP` or block the account. Deletion removes everything. |
+| **Easy delete** | Every message carries an unsubscribe link that opens a confirmation page (a GET never deletes, so link scanners cannot unsubscribe people); one button press deletes everything. LINE users can send `STOP` or block the account. |
 | **Drills never reach real users** | Drills go only to subscribers who opted into drills, and every drill message is labelled. |
 
 "Zero knowledge" in the pitch should be phrased as **"no account, no tracking, minimal data"**. A phone number or email is personal data, and "zero-knowledge" has a specific cryptographic meaning that a technical audience may challenge.
@@ -70,7 +70,7 @@ Why a separate listener: Vercel functions can't hold a WebSocket open, and Verce
 api/
   config.js         GET  public config (channels live, languages, prefectures, VAPID key)
   subscribe.js      POST create subscriber (or a LINE linking code)
-  unsubscribe.js    GET/POST delete subscriber (id + HMAC token)
+  unsubscribe.js    GET confirmation page, POST delete subscriber (id + HMAC token)
   ingest.js         POST official messages from the listener / adapters
   drill.js          GET scenarios, POST run a drill (DRILL_SECRET)
   guidance.js       GET guidance for /go (no personal data, cacheable)

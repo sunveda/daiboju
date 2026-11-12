@@ -98,6 +98,14 @@ test('subscribe → real earthquake → both messages in the right language → 
   assert.equal(g.shelterLayer, 'skhb04');
   assert.ok(g.guidance.steps.length >= 2);
 
+  // A link scanner opening the unsubscribe link (GET) must not delete anything.
+  const confirm = await unsubscribe.GET(get(`/api/unsubscribe?id=${id}&t=${unsubToken}`));
+  assert.equal(confirm.status, 200);
+  assert.match(await confirm.text(), /<form method="post"/);
+  const { getSubscriber } = await import('../api/_lib/subscribers.js');
+  assert.ok(await getSubscriber(id), 'GET only shows a confirmation');
+  assert.equal((await unsubscribe.GET(get(`/api/unsubscribe?id=${id}&t=wrong`))).status, 400);
+
   const u = await unsubscribe.POST(post(`/api/unsubscribe?id=${id}&t=${unsubToken}`, {}));
   assert.equal(u.status, 200);
   const c = await (await ingest.POST(post('/api/ingest', { ...P2P_QUAKE('DetailScale'), id: 'q-new', earthquake: { ...P2P_QUAKE().earthquake, time: '2026/11/12 19:00:00' } }, auth))).json();
