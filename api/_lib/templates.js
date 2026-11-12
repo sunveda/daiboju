@@ -66,11 +66,17 @@ export function stage1Text(hazard, lang) {
 }
 
 // Fallback next steps, used when Argon is slow, down or returns something invalid.
-// English and Japanese only for now; other languages get English.
+// All 7 languages for high_ground_now, check_building and evacuate_now (also used by the
+// no-key demo); English and Japanese for the rest, other languages get English.
 const STAGE2 = {
   high_ground_now: {
     en: { title: 'Tsunami: go to high ground now', steps: ['Go to high ground or the 3rd floor or higher of a sturdy concrete building.', 'Do not use a car unless you cannot walk.', 'Stay there until the warning is lifted. More waves can come for hours.'] },
     ja: { title: '津波：今すぐ高い所へ', steps: ['高台か、頑丈な鉄筋コンクリートの建物の3階以上へ避難してください。', '歩ける人は車を使わないでください。', '警報が解除されるまで戻らないでください。津波は何度も来ます。'] },
+    zh: { title: "海啸：立即前往高处", steps: ["前往高地，或坚固钢筋混凝土建筑的3楼或更高。", "能步行就不要开车。", "警报解除前不要返回。海啸会在数小时内反复来袭。"] }, // TODO(review)
+    ko: { title: "쓰나미: 지금 바로 높은 곳으로", steps: ["높은 곳이나 튼튼한 철근 콘크리트 건물의 3층 이상으로 대피하세요.", "걸을 수 있다면 차를 이용하지 마세요.", "경보가 해제될 때까지 돌아가지 마세요. 쓰나미는 몇 시간 동안 여러 번 옵니다."] }, // TODO(review)
+    vi: { title: "Sóng thần: lên chỗ cao ngay", steps: ["Lên chỗ cao hoặc tầng 3 trở lên của tòa nhà bê tông cốt thép chắc chắn.", "Không dùng ô tô nếu bạn có thể đi bộ.", "Ở lại đó cho đến khi cảnh báo được dỡ bỏ. Sóng có thể đến nhiều lần trong nhiều giờ."] }, // TODO(review)
+    pt: { title: "Tsunami: vá para um lugar alto agora", steps: ["Vá para um lugar alto ou para o 3º andar ou acima de um prédio firme de concreto.", "Não use carro se puder andar.", "Fique lá até o alerta ser cancelado. Podem vir mais ondas por horas."] }, // TODO(review)
+    es: { title: "Tsunami: ve a un lugar alto ahora", steps: ["Ve a un lugar alto o al 3.er piso o más alto de un edificio firme de concreto.", "No uses el coche si puedes caminar.", "Quédate ahí hasta que se levante la alerta. Pueden llegar más olas durante horas."] }, // TODO(review)
   },
   leave_coast: {
     en: { title: 'Tsunami advisory: leave the water and shore', steps: ['Get out of the sea and away from beaches and river mouths.', 'Do not go fishing, swimming or sightseeing at the coast.', 'Stay away until the advisory is lifted.'] },
@@ -83,6 +89,11 @@ const STAGE2 = {
   check_building: {
     en: { title: 'Strong shaking: check your building', steps: ['When the shaking stops, check for fire and turn off the gas if safe.', 'If the building is damaged, leaning or smells of gas, leave carefully and go to an evacuation site.', 'If it is safe, stay inside. Strong aftershocks can follow.', 'Wear shoes: there may be broken glass.'] },
     ja: { title: '強い揺れ：建物を確認', steps: ['揺れが収まったら火の元を確認し、安全ならガスを止めてください。', '建物が壊れている・傾いている・ガスの臭いがする場合は、落ち着いて避難場所へ。', '安全なら建物の中にとどまってください。強い余震に注意。', 'ガラスの破片に備えて靴をはいてください。'] },
+    zh: { title: "强烈摇晃：检查你的建筑", steps: ["摇晃停止后，检查火源，安全时关闭燃气。", "如果建筑受损、倾斜或有燃气味，请小心离开，前往避难场所。", "如果安全，请留在室内。可能会有强烈余震。", "穿上鞋子，地上可能有碎玻璃。"] }, // TODO(review)
+    ko: { title: "강한 흔들림: 건물을 확인하세요", steps: ["흔들림이 멈추면 불을 확인하고, 안전하면 가스를 잠그세요.", "건물이 부서졌거나 기울었거나 가스 냄새가 나면 조심해서 나와 대피소로 가세요.", "안전하다면 실내에 머무르세요. 강한 여진이 올 수 있습니다.", "깨진 유리에 대비해 신발을 신으세요."] }, // TODO(review)
+    vi: { title: "Rung lắc mạnh: kiểm tra tòa nhà", steps: ["Khi hết rung, kiểm tra lửa và khóa gas nếu an toàn.", "Nếu tòa nhà bị hư hỏng, nghiêng hoặc có mùi gas, hãy cẩn thận rời đi và đến nơi sơ tán.", "Nếu an toàn, hãy ở trong nhà. Có thể có dư chấn mạnh.", "Mang giày vì có thể có kính vỡ."] }, // TODO(review)
+    pt: { title: "Tremor forte: verifique o prédio", steps: ["Quando o tremor parar, verifique se há fogo e feche o gás se for seguro.", "Se o prédio estiver danificado, inclinado ou com cheiro de gás, saia com cuidado e vá a um local de evacuação.", "Se for seguro, fique dentro. Podem vir réplicas fortes.", "Calce sapatos: pode haver vidro quebrado."] }, // TODO(review)
+    es: { title: "Sacudida fuerte: revisa tu edificio", steps: ["Cuando pare el temblor, revisa si hay fuego y cierra el gas si es seguro.", "Si el edificio está dañado, inclinado o huele a gas, sal con cuidado y ve a un lugar de evacuación.", "Si es seguro, quédate dentro. Puede haber réplicas fuertes.", "Ponte zapatos: puede haber vidrios rotos."] }, // TODO(review)
   },
   stay_alert: {
     en: { title: 'Earthquake: stay where you are if safe', steps: ['Stay away from windows and tall furniture.', 'Check for fire and gas.', 'Be ready for aftershocks in the coming days.'] },
@@ -91,6 +102,11 @@ const STAGE2 = {
   evacuate_now: {
     en: { title: 'Evacuate now', steps: ['Go to an evacuation site now, while it is still safe to walk.', 'Avoid rivers, slopes and underpasses on the way.', 'If outside is already dangerous, move to the highest floor away from slopes instead.'] },
     ja: { title: '今すぐ避難', steps: ['安全に歩けるうちに、今すぐ避難場所へ移動してください。', '途中、川・がけ・アンダーパスを避けてください。', '外がすでに危険なら、がけから離れた建物の上の階へ移動してください。'] },
+    zh: { title: "立即避难", steps: ["趁还能安全步行，现在就前往避难场所。", "途中避开河流、山坡和地下通道。", "如果外面已经很危险，请移动到远离山坡的建筑高层。"] }, // TODO(review)
+    ko: { title: "지금 대피하세요", steps: ["안전하게 걸을 수 있을 때 지금 대피소로 이동하세요.", "가는 길에 강, 비탈, 지하차도를 피하세요.", "밖이 이미 위험하다면 비탈에서 먼 건물의 위층으로 이동하세요."] }, // TODO(review)
+    vi: { title: "Sơ tán ngay", steps: ["Đi đến nơi sơ tán ngay khi vẫn còn đi bộ an toàn.", "Tránh sông, sườn dốc và đường hầm trên đường đi.", "Nếu bên ngoài đã nguy hiểm, hãy lên tầng cao của tòa nhà xa sườn dốc."] }, // TODO(review)
+    pt: { title: "Evacue agora", steps: ["Vá agora a um local de evacuação, enquanto ainda é seguro caminhar.", "No caminho, evite rios, encostas e passagens subterrâneas.", "Se lá fora já estiver perigoso, suba para o andar mais alto, longe de encostas."] }, // TODO(review)
+    es: { title: "Evacúa ahora", steps: ["Ve ahora a un lugar de evacuación, mientras todavía es seguro caminar.", "En el camino, evita ríos, laderas y pasos subterráneos.", "Si afuera ya es peligroso, sube al piso más alto, lejos de laderas."] }, // TODO(review)
   },
   safest_place_now: {
     en: { title: 'Disaster is happening: get to the safest spot now', steps: ['Do not go outside if it is dangerous.', 'Move to the highest room on the side away from slopes and rivers.', 'Call 119 if you are trapped or hurt.'] },
